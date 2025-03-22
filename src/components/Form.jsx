@@ -1,46 +1,47 @@
 import { useState } from "react";
 
-function Form({ addTodo }) {
-  const [text, setText] = useState("");
+function Form({ addTask }) {
+  const [taskInput, setTaskInput] = useState("");
+  const [error, setError] = useState("");
+  const [isAdding, setIsAdding] = useState(false); // State to track if a task is being added
 
-  function handleSubmit(e) {
+  const handleSubmit = (e) => {
     e.preventDefault();
-    const todoText = text.trim();
-    if (!todoText) return;
+    if (taskInput.trim() === "") {
+      setError("Task cannot be empty!"); // Set error message
+      return;
+    }
+    setIsAdding(true); // Trigger animation
+    addTask(taskInput); // Add the task
+    setTaskInput(""); // Clear the input
+    setError(""); // Clear the error
 
-    addTodo({
-      text: todoText,
-      id: `todo-${Date.now()}`,  // Unique ID using timestamp
-      completed: false
-    });
-
-    clearForm();
-  }
-
-  function clearForm() {
-    setText("");
-  }
+    // Reset animation after a short delay
+    setTimeout(() => setIsAdding(false), 500); // Match animation duration
+  };
 
   return (
-    <form className="text-white flex gap-1 w-full mb-4" onSubmit={handleSubmit}>
-      <label htmlFor="todo" className="flex-1 mr-1">
-        <span className="hidden">Todo</span>
-        <input
-          className="w-full text-black px-1 py-2 border-b border-black bg-green-300"
-          type="text"
-          name="todo"
-          placeholder="Add New Todo"
-          value={text}
-          onChange={(e) => setText(e.target.value)}
-        />
-      </label>
+    <form onSubmit={handleSubmit} className="font-['Sans-serif'] text-sm flex gap-2 mb-2">
+      <input
+        className="text-black font-bold flex-1 p-2 border border-[#0bf245] rounded-md focus:outline-none focus:border-green-500 transition-colors duration-200"
+        type="text"
+        value={taskInput}
+        onChange={(e) => setTaskInput(e.target.value)}
+        placeholder="Enter a task...."
+      />
       <button
-        className="text-black bg-secondary w-9 h-9 flex justify-center items-center rounded-full shadow-button"
         type="submit"
+        className={`px-3 py-2 border-none bg-[#82b7f1] text-white cursor-pointer rounded-md transition-colors duration-300 hover:bg-[#001122] ${
+          isAdding ? "animate-pulse" : "" 
+        }`}
       >
         Add
-        <span className="sr-only">Add Todo</span>
       </button>
+      {error && (
+        <p className="text-[#eae0e0] text-sm bg-[#f40303] rounded-md px-3 py-2 transition-opacity duration-300">
+          {error}
+        </p>
+      )}
     </form>
   );
 }

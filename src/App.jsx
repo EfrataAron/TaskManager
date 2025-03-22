@@ -1,120 +1,55 @@
 
-import { useState } from "react";
-import FilterButton from "./components/Filter";
-import Form from "./components/Form";
-import Todo from "./components/TodoList";
-import StoreLocal from "./StoreLocal";
 
+import { useEffect, useState } from "react";
+import StoreLocal from "./StoreLocal";
+import Form from "./components/Form";
+import Filter from "./components/Filter";
+import Todo from "./components/TaskList";
 import './App.css'
 
-const FILTER_MAP = {
-  All: () => true,
-  Active: (task) => !task.completed,
-  Completed: (task) => task.completed
-}
-
-const FILTER_NAMES = Object.keys(FILTER_MAP);
+const LOCAL_STORAGE_KEY = "tasks";
 
 function App() {
+  const [tasks, setTasks] = StoreLocal(LOCAL_STORAGE_KEY, []);
+  const [filter, setFilter] = useState("all");
 
-  // const [todos, setTodos] = useState([]);
-  const [todos, setTodos] = StoreLocal('todos', []);
-  const [completedAll, setCompletedAll] = useState(false);
-  const [filter, setFilter] = useState("All");
-  const [currentlyEditing, setCurrentlyEditing] = useState("");
+  // Add Task
+  const addTask = (text) => {
+    setTasks([...tasks, { id: Date.now(), text, completed: false }]);
+  };
 
-  function addTodo(todo) {
-    setTodos([
-      ...todos, 
-      todo
-    ]);
-  }
+  // Toggle Task Completion
+  const toggleTask = (taskId) => {
+    setTasks(
+      tasks.map((task) =>
+        task.id === taskId ? { ...task, completed: !task.completed } : task
+      )
+    );
+  };
 
-  function deleteTodo(id) {
-    setTodos(todos.filter((todo) => todo.id !== id));
-  }
+  // Remove Task
+  const removeTask = (taskId) => {
+    setTasks(tasks.filter((task) => task.id !== taskId));
+  };
 
-  function deleteAll(){
-    setTodos([]);
-  }
-
-  function toggleTodo(id){
-    setTodos(todos.map((todo) => (
-      todo.id === id ? {
-        ...todo,
-        completed: !todo.completed
-      } : todo
-    )))
-  }
-
-  function toggleAll(){
-    setTodos(todos.map((todo) => (
-      {
-        ...todo,
-        completed: !todo.completed
-      }      
-    )
-    ));
-  }
-
-  function updateTodo(text, id){
-    console.log(text)
-    setTodos(todos.map((todo) => (
-      todo.id === id ? {
-        ...todo,
-        text: text
-      } : todo 
-    )))
-  }
-
-  function completeAll() {
-    setTodos(todos.map((todo) => (
-      { 
-        ...todo,
-        completed: !completedAll
-      }
-    )));
-    setCompletedAll(!completedAll);
-  }
-
-  const filterList = FILTER_NAMES.map((name) => (
-    <FilterButton 
-      name={name}
-      key={name}
-      isPressed={name === filter} 
-      setFilter={setFilter}
-    />
-  ));
+  // Filtered Task List
+  const getFilteredTasks = () => {
+    if (filter === "active") return tasks.filter((task) => !task.completed);
+    if (filter === "completed") return tasks.filter((task) => task.completed);
+    return tasks;
+  };
 
   return (
-    <div className="w-screen app-container bg-green-100 bgcover flex h-screen">
-      <div className="m-auto  white p-6 rounded-lg text-black max-w-md w-full">
-        <h2 className=" text-xl font-semibold mb-4">TO DO LIST</h2>
-        <Form addTodo={addTodo} 
-        />
-        <ul className=" todos">
-          {todos.filter(FILTER_MAP[filter]).map(({ text, id, completed }) => (
-            <Todo 
-              text={text} 
-              id={id} 
-              completed={completed}
-              deleteTodo={deleteTodo}
-              toggleTodo={toggleTodo}
-              updateTodo={updateTodo}
-              isEditing={id === currentlyEditing}
-              setCurrentlyEditing={setCurrentlyEditing}/>
-          ))}
-        </ul>
-
-        <div className="hidden">
-          <button onClick={deleteAll}>Delete All</button>
-          <button onClick={toggleAll}>Toggle All</button>
-          <button onClick={completeAll}>Complete All</button>
-        </div>
-        <div className={!todos.length && 'hidden'}>
-          {filterList}
-        </div>
-      </div>
+    // task-manager
+    <div className=" max-w-md mx-auto p-5 text-center bg-[#b4ecaa] rounded-lg shadow-lg">
+      <h2 className="text-[#18620f] font-bold text-2xl font-['Sans-serif']">Task Manager</h2>
+      <Form addTask={addTask} />
+      <Filter filter={filter} setFilter={setFilter} />
+      <Todo
+        tasks={getFilteredTasks()}
+        toggleTask={toggleTask}
+        removeTask={removeTask}
+      />
     </div>
   );
 }
